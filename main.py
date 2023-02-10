@@ -7,6 +7,10 @@ matrix = [[0.299, 0.587, 0.114], [-0.168736, -0.331264, 0.5], [0.5, -0.418688, -
 
 
 def encoder(bmp):
+    image = readImage(bmp)
+    pimage = padding(image)
+    r, g, b = rgbComp(pimage)
+    ycbcr = rgbToYCbCr(r,g,b)
     return 0
 
 
@@ -35,7 +39,7 @@ def showImage(image, cMap=None):
 
 
 # 3.4
-def rgb_comp(image):
+def rgbComp(image):
     r = image[:, :, 0]
     g = image[:, :, 1]
     b = image[:, :, 2]
@@ -43,7 +47,7 @@ def rgb_comp(image):
 
 
 # 3.4
-def rgb_recons(r, g, b):
+def rgbRecons(r, g, b):
     [nl, nc, x] = r.shape
     imgRec = np.zeros((nl, nc, 3))
     imgRec[:, :, 0] = r
@@ -53,33 +57,28 @@ def rgb_recons(r, g, b):
 
 
 # 4.1
-def padding(comp):
-    [nLine, nColumns, x] = comp.shape
-    pComp = np.zeros([nLine, nColumns, x])
+def padding(image):
+    [nLine, nColumns, x] = image.shape
 
     fillLines = 32 - nLine % 32
     fillColumns = 32 - nColumns % 32
 
-    if fillLines != 32 and fillColumns != 32:
-        lastLine = comp[nLine - 1, :][np.newaxis, :]
-        repLine = lastLine.repeat(fillLines, axis=0)
-        pComp = np.vstack([comp, repLine])
-        lastColumn = comp[nLine - 1, :][:, np.newaxis]
-        repColumn = lastColumn.repeat(fillColumns, axis=1)
-        pComp = np.vstack([pComp, repColumn])
-        return pComp
+    pimage = image
+    if fillLines != 32:
+        lastLine = pimage[nLine - 1, :][np.newaxis, :]
+        repLine = np.repeat(lastLine, fillLines, axis=0)
+        pimage = np.vstack((pimage, repLine))
+    if fillColumns != 32:
+        lastColumn = pimage[:, nColumns - 1][:, np.newaxis]
+        repColumn = np.repeat(lastColumn, fillColumns, axis=1)
+        pimage = np.hstack((pimage, repColumn))
+    return pimage
 
-    elif fillLines != 32:
-        lastLine = comp[nLine - 1, :][np.newaxis, :]
-        repLine = lastLine.repeat(fillLines, axis=0)
-        pComp = np.vstack([comp, repLine])
 
-    elif fillColumns != 32:
-        lastColumn = comp[nLine - 1, :][:, np.newaxis]
-        repColumn = lastColumn.repeat(fillColumns, axis=1)
-        pComp = np.vstack([comp, repColumn])
-
-    return pComp
+# 4.1
+def inversePadding(pimage,nLines,nColumns):
+    image = pimage[:nLines, :nColumns]
+    return image
 
 
 # 5.1
