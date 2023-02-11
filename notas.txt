@@ -1,0 +1,141 @@
+1.
+diferencas em termos de compressao
+tabela com taxa de compressao
+        barn |  logo  | pepper
+    fA
+    fM
+    fB
+
+diferencas em termos de qualidade e justificar
+        barn |  logo  | pepper
+    fA   A         M
+    fM
+    fB
+
+    ficheiro com taxa de comrpessao mais alta
+    ficheiro com qualidade maior depois de compressao
+
+
+2.
+def encoder(filename,...):
+
+
+def decoder(filename,...):
+
+
+def main():
+
+if __name__=="__main__":
+    main()
+
+
+3.
+usar numpy, matplotlib
+usar o matplotlib para ler imagem
+
+3.4 [R,G,B] readRGB(img)
+
+
+%matplotlib
+img.show
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.image as img
+import matplotlib.colors as clr
+
+
+
+def encoder(source):
+    image = read_image(source)
+    return 0
+
+
+def decoder():
+
+    return 0
+
+
+#vai receber os parametros do clr
+def colormap():
+    cmgray = clr.LinearSegmentedColormap.from_list('gray',[(0,0,0),(1,1,1)],256)
+    cmgRed = clr.LinearSegmentedColormap.from_list('gray',[(0,0,0),(1,0,0)],256)
+    cmBlue = clr.LinearSegmentedColormap.from_list('gray',[(0,0,0),(0,0,1)],256)
+    cmgGreen = clr.LinearSegmentedColormap.from_list('gray',[(0,0,0),(0,1,0)],256)
+    return cmgray
+
+def showcolor():
+    #plt.imshow(colormap,imagem)
+    #ir buscar o canal red R = img[:, :, 0]
+    # plt.figure, plt.imshow(R,cmgray), plt.axis('off')
+    pass
+
+
+# para o decoder:
+#[nl,nc,ncanais] = img.shape
+#imReconst = np.zeros((nl,nc,nch))
+#imreconst[:,:,0] = R
+#imreconst[:,:,1] = G
+#imreconst[:,:,2] = B
+#
+
+
+"""
+ex4 
+
+32x32
+
+8x8 neste caso
+x = np.random.rand(4,5)
+[nl, nc] = x.shape
+
+nel = 8-nl%8
+
+#linha last = x[nl-1,:][np.newaxis,:]
+#coluna last = x[nl-1,:][:, np.newaxis]
+
+rep = last.repeat(nel,axis=0)
+
+xp = numpy.vstack([x,rep])
+
+xr = xp[:nl,:nc]
+
+"""
+
+"""
+ex5
+
+usar matriz de transformacao slide 46 e 47
+
+T = np.random.rand(3,3)
+Ti = np.linalg.inv(T)
+
+Y = T[0,0]*R + T[0,1]*G + T[0,2]* B
+R = Ti[0,0]*Y + Ti[0,1]*(Cb-128) + Ti[0,2]*(Cr-128)
+R[R>255] = 255
+R[R<0] = 0
+R = np.round(R).astype(np.uint8)
+
+"""
+
+
+
+
+
+def read_image(source):
+    image = img.imread(source)
+    print(image[0][0])
+    return image
+
+
+read_image("logo.bmp")
+
+
+
+def main():
+    read_image("logo.bmp")
+
+if __name__=="__main__":
+    main()

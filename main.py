@@ -23,8 +23,8 @@ def encoder(bmp):
 
     #colormap
     redCm = colorMap('red',[(0,0,0),(1,0,0)] ,256)
-    greenCm = colorMap('red',[(0,0,0),(0,1,0)] ,256)
-    blueCm = colorMap('red',[(0,0,0),(0,0,1)] ,256)
+    greenCm = colorMap('green',[(0,0,0),(0,1,0)] ,256)
+    blueCm = colorMap('blue',[(0,0,0),(0,0,1)] ,256)
     
     # 3.4 e 3.5: separacao das componentes RGB e visualizacao com o seu colorMap
     r, g, b = rgbComp(image)
@@ -41,6 +41,7 @@ def encoder(bmp):
     ycbcr=mostraYCbCr(Y,Cb,Cr)
 
     grayCm = colorMap('gray', [(0,0,0),(1,1,1)], 256)
+    
     show(Y,"canal y no colormap cinza",grayCm)
     show(Cb,"canal cb no colormap cinza",grayCm)
     show(Cr,"canal cr no colormap cinza",grayCm)
