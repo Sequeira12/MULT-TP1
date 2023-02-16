@@ -112,8 +112,8 @@ def padding(image):
     pimage = image
     if fillLines != 32:
         lastLine = pimage[nLine - 1, :][np.newaxis, :]
-        repLine = np.repeat(lastLine, fillLines, axis=0)
-        pimage = np.vstack((pimage, repLine))
+        repLine = np.repeat(lastLine, fillLines, axis=0) # repete a ultima linha x vezes
+        pimage = np.vstack((pimage, repLine)) #junta / concateneação
     if fillColumns != 32:
         lastColumn = pimage[:, nColumns - 1][:, np.newaxis]
         repColumn = np.repeat(lastColumn, fillColumns, axis=1)
@@ -157,7 +157,8 @@ def YCbCrTorgb(Y, Cb, Cr):
     g = (matrixInv[1][0] * Y) + (matrixInv[1][1] * (Cb - 128)) + (matrixInv[1][2] * (Cr - 128))
     g[g > 255] = 255
     g[g < 0] = 0
-    g = np.round(g).astype(np.uint8)
+    g = np.round(g).astype(np.uint8) #converte para int
+
 
     b = (matrixInv[2][0] * Y) + (matrixInv[2][1] * (Cb - 128)) + (matrixInv[2][2] * (Cr - 128))
     b[b > 255] = 255
