@@ -46,12 +46,16 @@ def encoder(bmp):
     show(Cb,"canal cb no colormap cinza",grayCm)
     show(Cr,"canal cr no colormap cinza",grayCm)
 
-    downsampling(Y,Cb,Cr,4,2,0, grayCm)
+    Y_d, Cb_d, Cr_d = downsampling(Y,Cb,Cr,4,2,2, grayCm)
 
-    return Y, Cb, Cr, line, col
+    return line, col,Y_d, Cb_d, Cr_d
 
 
-def decoder(line, col,y, cb, cr):
+def decoder(line, col,Y_d, Cb_d, Cr_d):
+    grayCm = colorMap('gray', [(0,0,0),(1,1,1)], 256)
+
+    y,cb,cr = upsampling(Y_d, Cb_d, Cr_d,4,2,2,grayCm)
+    
     r,g,b = YCbCrTorgb(y,cb,cr)
     
     #reconstroi imagem com padding
@@ -171,7 +175,7 @@ def YCbCrTorgb(Y, Cb, Cr):
 
 
 
-def downsampling(Y, Cb, Cr,fY,fCr,fCb,colormap):
+def downsampling(Y, Cr, Cb,fY,fCr,fCb,colormap):
     """
     Parameters:
     source: Input Image array (Single-channel, 8-bit or floating-point) 
@@ -198,21 +202,49 @@ def downsampling(Y, Cb, Cr,fY,fCr,fCb,colormap):
     Cb_d = cv2.resize(Cb,dim1,fx=fCb/fY, fy=fy, interpolation=cv2.INTER_LINEAR)
     Cr_d = cv2.resize(Cr,dim2,fx=fCr/fY, fy=fy, interpolation=cv2.INTER_LINEAR)
     
-
+    print(Cb.shape[0],Cb.shape[1],Cb_d.shape[0],Cb_d.shape[1])
+    print(Cr.shape[0],Cr.shape[1],Cr_d.shape[0],Cr_d.shape[1])
     print(fCb/fY, fCr/fY, fy)
+
     show(Cb_d,"subamostragem cb", colormap)
     show(Cr_d,"subamostragem cr", colormap)
+
     return Y_d, Cb_d, Cr_d
 
-def upsampling():
-    pass
+def upsampling(Y_d, Cr_d, Cb_d, fY, fCr, fCb, colormap):
+    Y=Y_d
+    fy=1
+    if(fCb == 0): 
+        fy=fY/fCr
+        fCb=fCr
+
+    x1=int(Cb_d.shape[1]*(fY/fCb))
+    y2=int(Cb_d.shape[0]*(fy))
+    dim1=(x1,y2)
+
+    x2=int(Cr_d.shape[1]*(fY/fCr))
+    y2=int(Cr_d.shape[0]*(fy))
+    dim2=(x2,y2)
+
+    Cb = cv2.resize(Cb_d,dim1,fx=fY/fCb, fy=fy, interpolation=cv2.INTER_LINEAR)
+    Cr = cv2.resize(Cr_d,dim2,fx=fY/fCr, fy=fy, interpolation=cv2.INTER_LINEAR)
+    
+    print(fy/fCb, fY/fCr,fy)
+    print(Cb.shape[0],Cb.shape[1],Cb_d.shape[0],Cb_d.shape[1])
+    print(Cr.shape[0],Cr.shape[1],Cr_d.shape[0],Cr_d.shape[1])
+
+
+    show(Cb,"reconstrucao cb", colormap)
+    show(Cr,"reconstrucao cr", colormap)
+    return Y, Cb, Cr
+
 
 
 def main():
     "logo.bmp" "barn_mountains.bmp""peppers.bmp"
-    y, cb, cr, line, col=encoder("barn_mountains.bmp")
+    line, col,Y_d, Cb_d, Cr_d=encoder("barn_mountains.bmp")
     
-    decoder(line, col, y, cb, cr)
+    decoder(line, col, Y_d, Cb_d, Cr_d)
 
 if __name__=="__main__":
     main()
