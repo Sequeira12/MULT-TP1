@@ -46,7 +46,7 @@ def encoder(bmp):
     show(Cb,"canal cb no colormap cinza",grayCm)
     show(Cr,"canal cr no colormap cinza",grayCm)
 
-    Y_d, Cb_d, Cr_d = downsampling(Y,Cb,Cr,4,2,2, grayCm)
+    Y_d, Cb_d, Cr_d = downsampling(Y,Cb,Cr,4,2,0, grayCm)
 
     return line, col,Y_d, Cb_d, Cr_d
 
@@ -54,7 +54,7 @@ def encoder(bmp):
 def decoder(line, col,Y_d, Cb_d, Cr_d):
     grayCm = colorMap('gray', [(0,0,0),(1,1,1)], 256)
 
-    y,cb,cr = upsampling(Y_d, Cb_d, Cr_d,4,2,2,grayCm)
+    y,cb,cr = upsampling(Y_d, Cb_d, Cr_d,4,2,0,grayCm)
     
     r,g,b = YCbCrTorgb(y,cb,cr)
     
