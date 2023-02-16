@@ -5,12 +5,12 @@ Tomás Dias:
 
 """
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as img
 import matplotlib.colors as clr
 import math
+import cv2
 
 
 matrix = [[0.299, 0.587, 0.114], [-0.168736, -0.331264, 0.5], [0.5, -0.418688, -0.081312]]
@@ -38,13 +38,15 @@ def encoder(bmp):
 
     Y, Cb, Cr = rgbToYCbCr(r,g,b)
 
-    ycbcr=mostraYCbCr(Y,Cb,Cr)
+    #mostraYCbCr(Y,Cb,Cr)
 
     grayCm = colorMap('gray', [(0,0,0),(1,1,1)], 256)
     
     show(Y,"canal y no colormap cinza",grayCm)
     show(Cb,"canal cb no colormap cinza",grayCm)
     show(Cr,"canal cr no colormap cinza",grayCm)
+
+    downsampling(Y,Cb,Cr,4,2,0, grayCm)
 
     return Y, Cb, Cr, line, col
 
@@ -166,24 +168,48 @@ def YCbCrTorgb(Y, Cb, Cr):
 
     return r, g, b
 
+
+
+def downsampling(Y, Cb, Cr,fY,fCr,fCb,colormap):
+    """
+    Parameters:
+    source: Input Image array (Single-channel, 8-bit or floating-point) 
+    dsize: Size of the output array
+    dest: Output array (Similar to the dimensions and type of Input image array) [optional]
+    fx: Scale factor along the horizontal axis  [optional]
+    fy: Scale factor along the vertical axis  [optional]
+    interpolation: One of the above interpolation methods  [optional]
+    """
+    Y_d=Y
+    fy=1
+    if(fCb == 0): 
+        fy=fCr/fY
+        fCb=fCr
+
+    x1=int(Cb.shape[1]*(fCb/fY))
+    y2=int(Cb.shape[0]*fy)
+    dim1=(x1,y2)
+
+    x2=int(Cr.shape[1]*(fCr/fY))
+    y2=int(Cr.shape[0]*fy)
+    dim2=(x2,y2)
+
+    Cb_d = cv2.resize(Cb,dim1,fx=fCb/fY, fy=fy, interpolation=cv2.INTER_LINEAR)
+    Cr_d = cv2.resize(Cr,dim2,fx=fCr/fY, fy=fy, interpolation=cv2.INTER_LINEAR)
+    
+
+    print(fCb/fY, fCr/fY, fy)
+    show(Cb_d,"subamostragem cb", colormap)
+    show(Cr_d,"subamostragem cr", colormap)
+    return Y_d, Cb_d, Cr_d
+
+def upsampling():
+    pass
+
+
 def main():
-    print("Escolha a imagem que deseja ler?\n1- logo.bmp\n2- barn_mountains.bmp\n3- peppers.bmp\n")
-    opt=input("Opção: ")
-    img = ""
-    if(opt.isnumeric()):
-        if(int(opt)>0 and int(opt)<4):
-            opt = int(opt)
-            if(opt == 1): img = "logo.bmp"
-            elif(opt==2):  img = "barn_mountains.bmp"
-            elif(opt==3):  img = "peppers.bmp"
-        else:
-            print("Opcão inválida\n")
-            return 1
-    else:
-        print("Opcão inválida\n")
-        return 1
-        
-    y, cb, cr, line, col=encoder(img)
+    "logo.bmp" "barn_mountains.bmp""peppers.bmp"
+    y, cb, cr, line, col=encoder("barn_mountains.bmp")
     
     decoder(line, col, y, cb, cr)
 
