@@ -1,3 +1,7 @@
+
+NO FINAL DO PROJETO :
+    MUDAR O plt.show() da função show para o final de tudo
+
 1.
 diferencas em termos de compressao
 tabela com taxa de compressao
@@ -139,3 +143,64 @@ def main():
 
 if __name__=="__main__":
     main()
+
+
+
+
+AULA 2
+
+import cv2
+(pip3 install opencv-python)
+
+cv2.resize(....), especificar a matriz, e fator de escala (0,5 0,2) PARA O downsampling E upsampling
+
+DS: 4 : 2 : 2  --IMPORTANTE         yref : fCr : fCb  
+    4 : 2 : 0  --IMPORTANTE          4    :  2  :  2 ---> 0 significa nas duas direções (2/4-1/2)
+    4 : 1 : 1   
+
+
+Irá ocorrer destruição, mas para o olho humano é tranquilo
+
+
+
+7. DCT - transformada discreta de cosseno. DCT tem maiores capacidades de compressão, vai ter muitos coeficientes não nulos e 
+o resto a zero.
+
+Ter que aplicar a DCT duas vezes seguidas,  7.2 é o JPEG
+
+A probabilidade de ter imagens abruptas é maior logo usa-se o 8x8??
+
+ -- aplicar a DCT por 8x8 -ciclos
+
+
+
+
+ imshow(log(abs(X) + 0.0001))---> X pode ser o Cb, Cr
+ adiciona-se 0.0001 porque o log(0) dá erro
+
+
+
+O rsultado fica a branco porque o ponto tem alta intensidade
+pois é o coeficiente DC,(valor medio)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
