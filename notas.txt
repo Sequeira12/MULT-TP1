@@ -185,6 +185,10 @@ pois é o coeficiente DC,(valor medio)
 
 
 
+Nota, na res do dct nao juntamos o cb e o cr no mesmo for porque se for por ex 4:2:1 o shape do cb != cr
+
+
+
 
 
 

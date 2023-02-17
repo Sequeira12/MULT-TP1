@@ -49,14 +49,15 @@ def encoder(bmp):
 
     Y_d, Cb_d, Cr_d = downsampling(Y,Cb,Cr,4,2,0, grayCm)
     #AQUI está 8 mas no outro exercicio diz 64, se quiserem faz-se tipo uma opção no inicio
-    Y_dct,Cb_dct,Cr_dct = dctblocos(Y_d,Cb_d,Cr_d,8)
+    Y_dct,Cb_dct,Cr_dct = dctblocos(Y_d,Cb_d,Cr_d,8,grayCm)
 
     return line, col,Y_dct,Cb_dct,Cr_dct
 
 
 def decoder(line, col,Y_dct,Cb_dct,Cr_dt):
     grayCm = colorMap('gray', [(0,0,0),(1,1,1)], 256)
-    Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct,Cb_dct,Cr_dt,8)
+
+    Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct,Cb_dct,Cr_dt,8,grayCm)
 
     y,cb,cr = upsampling(Y_d, Cb_d, Cr_d,4,2,0,grayCm)
     
@@ -210,6 +211,7 @@ def downsampling(Y, Cr, Cb,fY,fCr,fCb,colormap):
     print(Cr.shape[0],Cr.shape[1],Cr_d.shape[0],Cr_d.shape[1])
     print(fCb/fY, fCr/fY, fy)
 
+    show(Y_d,"subamostragem Y", colormap)
     show(Cb_d,"subamostragem cb", colormap)
     show(Cr_d,"subamostragem cr", colormap)
 
@@ -237,7 +239,7 @@ def upsampling(Y_d, Cr_d, Cb_d, fY, fCr, fCb, colormap):
     print(Cb.shape[0],Cb.shape[1],Cb_d.shape[0],Cb_d.shape[1])
     print(Cr.shape[0],Cr.shape[1],Cr_d.shape[0],Cr_d.shape[1])
 
-
+    show(Y,"reconstrucao Y", colormap)
     show(Cb,"reconstrucao cb", colormap)
     show(Cr,"reconstrucao cr", colormap)
     return Y, Cb, Cr
@@ -250,67 +252,55 @@ def dct(X):
 def inversa_dct(X):
     return f.idct(f.idct(X,norm="ortho").T,norm="ortho").T
 
+#funcao que percorre os canais e calcula a dct nos blocos
+def percorreDCTblocos(ch, blocos,dctORidct):
+    ch_dct = np.zeros((ch.shape[0],ch.shape[1]))
+    range1 = int(ch.shape[0]/blocos)
+    range2 = int(ch.shape[1]/blocos)
+
+    for i in range(range1):
+        for j in range(range2):
+            if(dctORidct==1):
+                ch_dct[i*blocos:i*blocos+blocos, j*blocos:j*blocos+blocos] = dct(ch[i*blocos:i*blocos+blocos, j*blocos:j*blocos+blocos])
+            else:
+                ch_dct[i*blocos:i*blocos+blocos, j*blocos:j*blocos+blocos] = inversa_dct(ch[i*blocos:i*blocos+blocos, j*blocos:j*blocos+blocos])
+    
+    return ch_dct
+
 
 #7.3
-
-def dctblocos(Y_d,Cb_d,Cr_d,blocos):
-    Cb_dct = np.zeros((Cb_d.shape[0],Cb_d.shape[1]))
-    Cr_dct = np.zeros((Cr_d.shape[0], Cr_d.shape[1]))
-    Y_dct = np.zeros((Y_d.shape[0], Y_d.shape[1]))
-
-    #ciclo para percorrer no Cr e Cb
-    for i in range(int(Cr_d.shape[0] / blocos)):
-        for k in range(int(Cr_d.shape[1] / blocos)):
-            Cb_dct[i * blocos:i * (2 * blocos)][k * blocos:k * (2 * blocos)] = dct(Cb_d[i * blocos:i * (2 * blocos)][k * blocos:k * (2 * blocos)])
-            Cr_dct[i * blocos:i * (2 * blocos)][k * blocos:k * (2 * blocos)] = dct(Cr_d[i * blocos:i * (2 * blocos)][k * blocos:k * (2 * blocos)])
-
-    # ciclo para percorrer no Y
-    for i in range(int(Y_d.shape[0]/blocos)):
-        for k in range(int(Y_d.shape[1]/blocos)):
-            Y_dct[i*blocos:i*(2*blocos)][k*blocos:k*(2*blocos)] = dct(Y_d[i*blocos:i*(2*blocos)][k*blocos:k*(2*blocos)])
-
+def dctblocos(Y_d,Cb_d,Cr_d,blocos,colormap):
+    Cb_dct = percorreDCTblocos(Cb_d,blocos,1)
+    Cr_dct = percorreDCTblocos(Cr_d,blocos,1)
+    Y_dct = percorreDCTblocos(Y_d,blocos,1)
 
     #visualização as imagens usando uma transformação logarítmica
     logY = np.log(np.abs(Y_dct) + 0.0001)
     logCb = np.log(np.abs(Cb_dct) + 0.0001)
     logCr = np.log(np.abs(Cr_dct) + 0.0001)
 
-    grayCm = colorMap('gray', [(0, 0, 0), (1, 1, 1)], 256)
     titulo = str(blocos) + "x" + str(blocos)
-    show(logY,"Canal Y com DCT em blocos " + titulo,grayCm)
-    show(logCb, "Canal Cb com DCT em blocos " + titulo, grayCm)
-    show(logCr, "Canal Cr com DCT em blocos " + titulo, grayCm)
+    show(logY,"Canal Y com DCT em blocos " + titulo,colormap)
+    show(logCb, "Canal Cb com DCT em blocos " + titulo, colormap)
+    show(logCr, "Canal Cr com DCT em blocos " + titulo, colormap)
     return Y_dct,Cb_dct,Cr_dct
 
 
-def inversodctblocos(Y_dct,Cb_dct,Cr_dct,blocos):
-    Cb_d = np.zeros((Cb_dct.shape[0],Cb_dct.shape[1]))
-    Cr_d = np.zeros((Cr_dct.shape[0], Cr_dct.shape[1]))
-    Y_d = np.zeros((Y_dct.shape[0], Y_dct.shape[1]))
-
-
-    #ciclo para percorrer no Cr e Cb
-    for i in range(int(Cr_dct.shape[0] / blocos)):
-        for k in range(int(Cr_dct.shape[1] / blocos)):
-            Cb_d[i * blocos:i * (2 * blocos)][k * blocos:k * (2 * blocos)] = inversa_dct(Cb_dct[i * blocos:i * (2 * blocos)][k * blocos:k * (2 * blocos)])
-            Cr_d[i * blocos:i * (2 * blocos)][k * blocos:k * (2 * blocos)] = inversa_dct(Cr_dct[i * blocos:i * (2 * blocos)][k * blocos:k * (2 * blocos)])
-
-    # ciclo para percorrer no Y vai de 8 em 8/64 em 64
-    for i in range(int(Y_d.shape[0]/blocos)):
-        for k in range(int(Y_d.shape[1]/blocos)):
-            Y_d[i*blocos:i*(2*blocos)][k*blocos:k*(2*blocos)] = inversa_dct(Y_dct[i*blocos:i*(2*blocos)][k*blocos:k*(2*blocos)])
-
+def inversodctblocos(Y_dct,Cb_dct,Cr_dct,blocos,colormap):
+    Cb_d = percorreDCTblocos(Cb_dct,blocos,0)
+    Cr_d = percorreDCTblocos(Cr_dct,blocos,0)
+    Y_d = percorreDCTblocos(Y_dct,blocos,0)
 
     #visualização as imagens usando uma transformação logarítmica
     logY = np.log(np.abs(Y_d) + 0.0001)
     logCb = np.log(np.abs(Cb_d) + 0.0001)
     logCr = np.log(np.abs(Cr_d) + 0.0001)
 
-    grayCm = colorMap('gray', [(0, 0, 0), (1, 1, 1)], 256)
     titulo = str(blocos) + "x" + str(blocos)
-    show(logY,"(inverso) Canal Y com DCT em blocos " + titulo,grayCm)
-    show(logCb," (inverso) Canal Cb com DCT em blocos " + titulo, grayCm)
-    show(logCr, "(inverso)Canal Cr com DCT em blocos " + titulo, grayCm)
+    show(logY,"(inverso) Canal Y com DCT em blocos " + titulo,colormap)
+    show(logCb," (inverso) Canal Cb com DCT em blocos " + titulo, colormap)
+    show(logCr, "(inverso)Canal Cr com DCT em blocos " + titulo, colormap)
+
     return Y_d,Cb_d,Cr_d
 
 
