@@ -57,7 +57,7 @@ def encoder(bmp):
 
 def decoder(line, col,Y_dct,Cb_dct,Cr_dt):
     grayCm = colorMap('gray', [(0,0,0),(1,1,1)], 256)
-    
+
     #Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct,Cb_dct,Cr_dt,8,grayCm)
 
@@ -254,7 +254,7 @@ def dct(X):
 def inversa_dct(X):
     return f.idct(f.idct(X,norm="ortho").T,norm="ortho").T
 
-#funcao que percorre os canais e calcula a dct nos blocos
+#funcao que percorre os canais e calcula a dct em bloco
 def percorreDCTblocos(ch, blocos,dctORidct):
     ch_dct = np.zeros((ch.shape[0],ch.shape[1]))
     range1 = int(ch.shape[0]/blocos)
