@@ -1,7 +1,7 @@
 """
-Bruno Sequeira: 
+Bruno Sequeira: 2020235721
 Rui Santos: 2020225542
-Tomás Dias:
+Tomás Dias: 2020215701
 
 """
 
