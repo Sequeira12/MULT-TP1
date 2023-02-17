@@ -48,7 +48,8 @@ def encoder(bmp):
     show(Cr,"canal cr no colormap cinza",grayCm)
 
     Y_d, Cb_d, Cr_d = downsampling(Y,Cb,Cr,4,2,0, grayCm)
-    #AQUI está 8 mas no outro exercicio diz 64, se quiserem faz-se tipo uma opção no inicio
+
+    #Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_dct,Cb_dct,Cr_dct = dctblocos(Y_d,Cb_d,Cr_d,8,grayCm)
 
     return line, col,Y_dct,Cb_dct,Cr_dct
@@ -56,7 +57,8 @@ def encoder(bmp):
 
 def decoder(line, col,Y_dct,Cb_dct,Cr_dt):
     grayCm = colorMap('gray', [(0,0,0),(1,1,1)], 256)
-
+    
+    #Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct,Cb_dct,Cr_dt,8,grayCm)
 
     y,cb,cr = upsampling(Y_d, Cb_d, Cr_d,4,2,0,grayCm)
@@ -270,9 +272,14 @@ def percorreDCTblocos(ch, blocos,dctORidct):
 
 #7.3
 def dctblocos(Y_d,Cb_d,Cr_d,blocos,colormap):
-    Cb_dct = percorreDCTblocos(Cb_d,blocos,1)
-    Cr_dct = percorreDCTblocos(Cr_d,blocos,1)
-    Y_dct = percorreDCTblocos(Y_d,blocos,1)
+    if(blocos==0):
+        Cb_dct = dct(Cb_d)
+        Cr_dct = dct(Cr_d)
+        Y_dct = dct(Y_d)
+    else:
+        Cb_dct = percorreDCTblocos(Cb_d,blocos,1)
+        Cr_dct = percorreDCTblocos(Cr_d,blocos,1)
+        Y_dct = percorreDCTblocos(Y_d,blocos,1)
 
     #visualização as imagens usando uma transformação logarítmica
     logY = np.log(np.abs(Y_dct) + 0.0001)
@@ -287,9 +294,14 @@ def dctblocos(Y_d,Cb_d,Cr_d,blocos,colormap):
 
 
 def inversodctblocos(Y_dct,Cb_dct,Cr_dct,blocos,colormap):
-    Cb_d = percorreDCTblocos(Cb_dct,blocos,0)
-    Cr_d = percorreDCTblocos(Cr_dct,blocos,0)
-    Y_d = percorreDCTblocos(Y_dct,blocos,0)
+    if(blocos==0):
+        Cb_d = inversa_dct(Cb_dct)
+        Cr_d = inversa_dct(Cr_dct)
+        Y_d = inversa_dct(Y_dct)
+    else:
+        Cb_d = percorreDCTblocos(Cb_dct,blocos,0)
+        Cr_d = percorreDCTblocos(Cr_dct,blocos,0)
+        Y_d = percorreDCTblocos(Y_dct,blocos,0)
 
     #visualização as imagens usando uma transformação logarítmica
     logY = np.log(np.abs(Y_d) + 0.0001)
