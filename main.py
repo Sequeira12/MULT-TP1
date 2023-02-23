@@ -13,8 +13,25 @@ import math
 import scipy.fftpack as f
 import cv2
 
+matrizQuantY = np.array([[16,11,10,16,24,40,51,61],
+               [12,12,14,19,26,58,60,55],
+               [14,13,16,24,40,57,69,56],
+               [14,17,22,29,51,87,80,62],
+               [18,22,37,56,68,109,103,77],
+               [24,35,55,64,81,104,113,92],
+               [49,64,78,87,103,121,120,101],
+               [72,92,95,98,112,100,103,99]])
 
-matrix = [[0.299, 0.587, 0.114], [-0.168736, -0.331264, 0.5], [0.5, -0.418688, -0.081312]]
+matrizQuantCbCr = np.array([[17,18,24,47,99,99,99,99],
+                            [18,21,26,66,99,99,99,99],
+                            [24,26,56,99,99,99,99,99],
+                            [47,66,99,99,99,99,99,99],
+                            [99,99,99,99,99,99,99,99],
+                            [99,99,99,99,99,99,99,99],
+                            [99,99,99,99,99,99,99,99],
+                            [99,99,99,99,99,99,99,99]])
+
+matrix = np.array([[0.299, 0.587, 0.114], [-0.168736, -0.331264, 0.5], [0.5, -0.418688, -0.081312]])
 
 
 def encoder(bmp):
@@ -52,12 +69,15 @@ def encoder(bmp):
     #Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_dct,Cb_dct,Cr_dct = dctblocos(Y_d,Cb_d,Cr_d,8,grayCm)
 
-    return line, col,Y_dct,Cb_dct,Cr_dct
+    Y_quant,Cb_quant,Cr_quant,matrizQuantY2,matrizQuantCbCr2 = quantizacao(Y_dct,Cb_dct,Cr_dct,8,grayCm,75,True)
+
+    return line, col,Y_quant,Cb_quant,Cr_quant,matrizQuantY2,matrizQuantCbCr2
 
 
-def decoder(line, col,Y_dct,Cb_dct,Cr_dt):
+def decoder(line, col,Y_quant,Cb_quant,Cr_quant,matrizQuantY2,matrizQuantCbCr2):
     grayCm = colorMap('gray', [(0,0,0),(1,1,1)], 256)
 
+    Y_dct, Cb_dct, Cr_dt = inversoquantizacao(Y_quant,Cb_quant,Cr_quant,matrizQuantY2,matrizQuantCbCr2,8,grayCm,75,False)
     #Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct,Cb_dct,Cr_dt,8,grayCm)
 
@@ -140,7 +160,7 @@ def inversePadding(pimage,nLines,nColumns):
 
 # 5.1
 def rgbToYCbCr(r, g, b):
-    print("Pixel [0][0] antes: R:"+str(r[0][0])+" G:"+str(g[0][0])+" B:"+str(b[0][0]))
+   # print("Pixel [0][0] antes: R:"+str(r[0][0])+" G:"+str(g[0][0])+" B:"+str(b[0][0]))
     Y = matrix[0][0] * r + matrix[0][1] * g + matrix[0][2] * b
     Cb = matrix[1][0] * r + matrix[1][1] * g + matrix[1][2] * b + 128
     Cr = matrix[2][0] * r + matrix[2][1] * g + matrix[2][2] * b + 128    
@@ -176,7 +196,7 @@ def YCbCrTorgb(Y, Cb, Cr):
     b[b < 0] = 0
     b = np.round(b).astype(np.uint8)
 
-    print("Pixel [0][0] depois: R:"+str(r[0][0])+" G:"+str(g[0][0])+" B:"+str(b[0][0]))
+    #print("Pixel [0][0] depois: R:"+str(r[0][0])+" G:"+str(g[0][0])+" B:"+str(b[0][0]))
 
     return r, g, b
 
@@ -316,11 +336,83 @@ def inversodctblocos(Y_dct,Cb_dct,Cr_dct,blocos,colormap):
     return Y_d,Cb_d,Cr_d
 
 
+
+# 8.1  e 8.2
+def percorreQuantblocos(ch,blocos,colormap,matriz,titulo,tipo,imprime):
+    ch_Quant = np.zeros((ch.shape[0], ch.shape[1]))
+    range1 = int(ch.shape[0] / blocos)
+    range2 = int(ch.shape[1] / blocos)
+
+    for i in range(range1):
+        for j in range(range2):
+            if tipo == 1:
+                ch_Quant[i*blocos:i*blocos+blocos, j*blocos:j*blocos+blocos] = np.round((ch[i*blocos:i*blocos+blocos, j*blocos:j*blocos+blocos]/matriz))
+            else:
+                ch_Quant[i * blocos:i * blocos + blocos, j * blocos:j * blocos + blocos] =  ch[i * blocos:i * blocos + blocos, j * blocos:j * blocos + blocos] * matriz
+
+
+
+    if(imprime):
+        log = np.log(np.abs(ch_Quant) + 0.0001)
+        show(log, titulo, colormap=colormap)
+    return ch_Quant
+
+
+def fatorQualidade(qf, matriz):
+    if qf >= 50:
+        sf = (100 - qf) / 50
+    else:
+        sf = 50 / qf
+
+    if sf == 0:
+        qs = np.ones((matriz.shape[0],matriz.shape[1]))
+        qs = np.round(qs).astype(np.uint8)
+        return qs
+    else:
+        qs = np.round(matriz * sf).astype(np.uint8)
+        qs[qs > 255] = 255
+        qs[qs < 1] = 1
+
+        return qs
+
+
+
+def quantizacao(Y_dct,Cb_dct,Cr_dct,blocos,colormap,fator,imprime):
+    matrizCbCr = fatorQualidade(fator, matrizQuantCbCr)
+    matrizY = fatorQualidade(fator,matrizQuantY)
+
+    titulo = "Canal Y Quantizacao " + str(blocos) + "x" + str(blocos) + "  - fator: " + str(fator)
+    Y_quant = percorreQuantblocos(Y_dct,blocos,colormap,matrizY,titulo,1,imprime)
+
+    titulo = "Canal Cb Quantizacao " + str(blocos) + "x" + str(blocos) + "  - fator: " + str(fator)
+    Cb_quant = percorreQuantblocos(Cb_dct, blocos, colormap, matrizCbCr,titulo,1,imprime)
+
+    titulo = "Canal Cr Quantizacao " + str(blocos) + "x" + str(blocos) + "  - fator: " + str(fator)
+    Cr_quant = percorreQuantblocos(Cr_dct, blocos, colormap, matrizCbCr,titulo,1,imprime)
+
+    return Y_quant,Cb_quant,Cr_quant,matrizY, matrizCbCr
+
+
+
+def inversoquantizacao(Y_quant, Cb_quant, Cr_quant,matrizY, matrizCbCr, blocos, colormap, fator,imprime):
+
+    titulo = "Canal Y Quantizacao (INV) " + str(blocos) + "x" + str(blocos) + "  - fator: " + str(fator)
+    Y_dct = percorreQuantblocos(Y_quant, blocos, colormap, matrizY, titulo,2,imprime)
+
+    titulo = "Canal Cb Quantizacao (INV)" + str(blocos) + "x" + str(blocos) + "  - fator: " + str(fator)
+    Cb_dct = percorreQuantblocos(Cb_quant, blocos, colormap, matrizCbCr, titulo,2,imprime)
+
+
+    titulo = "Canal Cr Quantizacao (INV)" + str(blocos) + "x" + str(blocos) + "  - fator: " + str(fator)
+    Cr_dct = percorreQuantblocos(Cr_quant, blocos, colormap, matrizCbCr, titulo,2,imprime)
+
+    return Y_dct, Cb_dct, Cr_dct
+
 def main():
     "logo.bmp" "barn_mountains.bmp""peppers.bmp"
-    line, col,Y_dct,Cb_dct,Cr_dt=encoder("barn_mountains.bmp")
+    line, col,Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2 = encoder("barn_mountains.bmp")
     
-    decoder(line, col, Y_dct,Cb_dct,Cr_dt)
+    decoder(line, col,Y_quant,Cb_quant,Cr_quant,matrizQuantY2,matrizQuantCbCr2)
 
 if __name__=="__main__":
     main()
