@@ -64,12 +64,12 @@ def encoder(bmp):
     show(Cb, "canal cb no colormap cinza", grayCm)
     show(Cr, "canal cr no colormap cinza", grayCm)
 
-    Y_d, Cb_d, Cr_d = downsampling(Y, Cb, Cr, 4, 2, 0, grayCm)
+    Y_d, Cb_d, Cr_d = downsampling(Y, Cb, Cr, 4, 2, 2, grayCm)
 
     # Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_dct, Cb_dct, Cr_dct = dctblocos(Y_d, Cb_d, Cr_d, 8, grayCm)
 
-    Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2 = quantizacao(Y_dct, Cb_dct, Cr_dct, 8, grayCm, 75,
+    Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2 = quantizacao(Y_dct, Cb_dct, Cr_dct, 8, grayCm, 10,
                                                                                True)
     Y_dpcm,Cb_dpcm,Cr_dpcm = codificao_dpcm(Y_quant, Cb_quant, Cr_quant,8,0,grayCm,True)
 
@@ -82,11 +82,11 @@ def decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2
     Y_quant,Cb_quant,Cr_quant = codificao_dpcm(Y_dpcm, Cb_dpcm, Cr_dpcm,8,1,grayCm,True)
 
     Y_dct, Cb_dct, Cr_dt = inversoquantizacao(Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2, 8, grayCm,
-                                              75, False)
+                                              10, False)
     # Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct, Cb_dct, Cr_dt, 8, grayCm)
 
-    y, cb, cr = upsampling(Y_d, Cb_d, Cr_d, 4, 2, 0, grayCm)
+    y, cb, cr = upsampling(Y_d, Cb_d, Cr_d, 4, 2, 2, grayCm)
 
     r, g, b = YCbCrTorgb(y, cb, cr)
 
@@ -431,10 +431,10 @@ def decode_dpcmblocos(ch_dpcm,blocos):
     for i in range(blocos):
         for j in range(blocos):
             if j != 0:
-                ch[i, j] = ch_dpcm[i, j] + ch_dpcm[i, j - 1]
+                ch[i, j] = ch_dpcm[i, j] + ch[i, j - 1]
             else:
                 if i != 0:
-                    ch[i, j] = ch_dpcm[i, j] + ch_dpcm[i - 1, -1]
+                    ch[i, j] = ch_dpcm[i, j] + ch[i - 1, -1]
     return ch
 
 
@@ -485,6 +485,10 @@ def main():
     line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2 = encoder("barn_mountains.bmp")
 
     decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2)
+    #print(matrizQuantY)
+    #xyz  = encode_dpcmblocos(matrizQuantY,8)
+    #yzx = decode_dpcmblocos(xyz,8)
+    #print(yzx)
 
 
 
