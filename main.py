@@ -71,7 +71,7 @@ def encoder(bmp):
 
     Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2 = quantizacao(Y_dct, Cb_dct, Cr_dct, 8, grayCm, 75,
                                                                                True)
-    Y_dpcm,Cb_dpcm,Cr_dpcm = codificao_dpcm(Y_quant, Cb_quant, Cr_quant,8,0,grayCm,False)
+    Y_dpcm,Cb_dpcm,Cr_dpcm = codificao_dpcm(Y_quant, Cb_quant, Cr_quant,8,0,grayCm,True)
 
     return line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2
 
@@ -79,7 +79,7 @@ def encoder(bmp):
 def decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2):
     grayCm = colorMap('gray', [(0, 0, 0), (1, 1, 1)], 256)
 
-    Y_quant,Cb_quant,Cr_quant = codificao_dpcm(Y_dpcm, Cb_dpcm, Cr_dpcm,8,1,grayCm,False)
+    Y_quant,Cb_quant,Cr_quant = codificao_dpcm(Y_dpcm, Cb_dpcm, Cr_dpcm,8,1,grayCm,True)
 
     Y_dct, Cb_dct, Cr_dt = inversoquantizacao(Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2, 8, grayCm,
                                               75, False)
@@ -356,11 +356,11 @@ def percorreQuantblocos(ch, blocos, colormap, matriz, titulo, tipo, imprime):
         for j in range(range2):
             if tipo == 1:
                 ch_Quant[i * blocos:i * blocos + blocos, j * blocos:j * blocos + blocos] = np.round(
-                    (ch[i * blocos:i * blocos + blocos, j * blocos:j * blocos + blocos] / matriz))
+                    (ch[i * blocos:i * blocos + blocos, j * blocos:j * blocos + blocos] / matriz)).astype(int)
             else:
-                ch_Quant[i * blocos:i * blocos + blocos, j * blocos:j * blocos + blocos] = ch[
+                ch_Quant[i * blocos:i * blocos + blocos, j * blocos:j * blocos + blocos] = (ch[
                                                                                            i * blocos:i * blocos + blocos,
-                                                                                           j * blocos:j * blocos + blocos] * matriz
+                                                                                           j * blocos:j * blocos + blocos] * matriz).astype(float)
 
     if (imprime):
         log = np.log(np.abs(ch_Quant) + 0.0001)
@@ -379,10 +379,10 @@ def fatorQualidade(qf, matriz):
         qs = np.round(qs).astype(np.uint8)
         return qs
     else:
-        qs = np.round(matriz * sf).astype(np.uint8)
+        qs = matriz * sf
         qs[qs > 255] = 255
         qs[qs < 1] = 1
-
+        qs = np.round(qs).astype(np.uint8)
         return qs
 
 
@@ -419,10 +419,10 @@ def encode_dpcmblocos(ch,blocos):
     for i in range(blocos):
         for j in range(blocos):
                 if j!= 0:
-                    ch_dpcm[i, j] = ch_dpcm[i, j]-ch_dpcm[i, j-1]
+                    ch_dpcm[i, j] = ch[i, j]-ch[i, j-1]
                 else:
                     if i != 0:
-                        ch_dpcm[i,j] = ch_dpcm[i,j]-ch_dpcm[i-1,-1]
+                        ch_dpcm[i,j] = ch[i,j]-ch[i-1,-1]
     return ch_dpcm
 
 
