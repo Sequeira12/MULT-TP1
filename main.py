@@ -13,6 +13,11 @@ import math
 import scipy.fftpack as f
 import cv2
 
+
+fatorQ=75
+nBlocos = 8
+
+
 matrizQuantY = np.array([[16, 11, 10, 16, 24, 40, 51, 61],
                          [12, 12, 14, 19, 26, 58, 60, 55],
                          [14, 13, 16, 24, 40, 57, 69, 56],
@@ -64,29 +69,29 @@ def encoder(bmp):
     show(Cb, "canal cb no colormap cinza", grayCm)
     show(Cr, "canal cr no colormap cinza", grayCm)
 
-    Y_d, Cb_d, Cr_d = downsampling(Y, Cb, Cr, 4, 2, 2, grayCm)
+    Y_d, Cb_d, Cr_d = downsampling(Y, Cb, Cr, 4, 2, 0, grayCm)
 
     # Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
-    Y_dct, Cb_dct, Cr_dct = dctblocos(Y_d, Cb_d, Cr_d, 8, grayCm)
+    Y_dct, Cb_dct, Cr_dct = dctblocos(Y_d, Cb_d, Cr_d, nBlocos, grayCm)
 
-    Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2 = quantizacao(Y_dct, Cb_dct, Cr_dct, 8, grayCm, 10,
+    Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2 = quantizacao(Y_dct, Cb_dct, Cr_dct, nBlocos, grayCm, fatorQ,
                                                                                True)
-    Y_dpcm,Cb_dpcm,Cr_dpcm = codificao_dpcm(Y_quant, Cb_quant, Cr_quant,8,0,grayCm,True)
+    Y_dpcm,Cb_dpcm,Cr_dpcm = codificao_dpcm(Y_quant, Cb_quant, Cr_quant,nBlocos,0,grayCm,True)
 
-    return line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2
+    return image , Y,line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2
 
 
 def decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2):
     grayCm = colorMap('gray', [(0, 0, 0), (1, 1, 1)], 256)
 
-    Y_quant,Cb_quant,Cr_quant = codificao_dpcm(Y_dpcm, Cb_dpcm, Cr_dpcm,8,1,grayCm,True)
+    Y_quant,Cb_quant,Cr_quant = codificao_dpcm(Y_dpcm, Cb_dpcm, Cr_dpcm,nBlocos,1,grayCm,True)
 
-    Y_dct, Cb_dct, Cr_dt = inversoquantizacao(Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2, 8, grayCm,
-                                              10, False)
+    Y_dct, Cb_dct, Cr_dt = inversoquantizacao(Y_quant, Cb_quant, Cr_quant, matrizQuantY2, matrizQuantCbCr2, nBlocos, grayCm,
+                                              fatorQ, True)
     # Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
-    Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct, Cb_dct, Cr_dt, 8, grayCm)
+    Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct, Cb_dct, Cr_dt, nBlocos, grayCm)
 
-    y, cb, cr = upsampling(Y_d, Cb_d, Cr_d, 4, 2, 2, grayCm)
+    y, cb, cr = upsampling(Y_d, Cb_d, Cr_d, 4, 2, 0, grayCm)
 
     r, g, b = YCbCrTorgb(y, cb, cr)
 
@@ -97,7 +102,7 @@ def decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2
     image = inversePadding(pimage, line, col)
 
     show(image, "imagem descomprimida")
-    return 0
+    return image, y, cb, cr
 
 
 # 3.1
@@ -414,6 +419,8 @@ def inversoquantizacao(Y_quant, Cb_quant, Cr_quant, matrizY, matrizCbCr, blocos,
 
     return Y_dct, Cb_dct, Cr_dct
 
+
+# 9
 def encode_dpcmblocos(ch,blocos):
     ch_dpcm = np.copy(ch)
     for i in range(blocos):
@@ -480,11 +487,38 @@ def codificao_dpcm(Y_quant, Cb_quant, Cr_quant,blocos,codeOrdecode,colormap,impr
     return Y_dpcm,Cb_dpcm, Cr_dpcm
 
 
+
+#10
+def calculaErro(imagem, imagemRec, yrec,yor ,line, col):
+    erro = abs(yor - yrec)
+
+    grayCm = colorMap('gray', [(0, 0, 0), (1, 1, 1)], 256)
+
+    show(erro,"erro",grayCm)
+    #print(type(imagem[0][0]), type(imagemRec[0][0]))
+    mse = (np.sum((imagem - imagemRec)**2)) / (line*col)
+    rmse = math.sqrt(mse)
+    p = (np.sum((imagem)**2)) / (line*col)
+    snr = 10 * math.log10(p/mse)
+    psnr = 10 * math.log10((np.max(imagem)**2)/mse)
+    
+    
+    print ("MSE:", mse)
+    print ("RMSE:", rmse)
+    print ("SNR:", snr)
+    print ("PSNR:", psnr)
+
+
+
 def main():
     "logo.bmp" "barn_mountains.bmp""peppers.bmp"
-    line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2 = encoder("barn_mountains.bmp")
+    image,Yor, line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2 = encoder("barn_mountains.bmp")
 
-    decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2)
+    imagemRec, y_rec, cb, cr = decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2)
+
+    image= image.astype(np.float64)
+
+    calculaErro(image,imagemRec, y_rec, Yor, line, col)
     #print(matrizQuantY)
     #xyz  = encode_dpcmblocos(matrizQuantY,8)
     #yzx = decode_dpcmblocos(xyz,8)
