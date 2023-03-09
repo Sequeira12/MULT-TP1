@@ -190,6 +190,12 @@ Nota, na res do dct nao juntamos o cb e o cr no mesmo for porque se for por ex 4
 
 
 
+##
+
+E = abc(Y - Yrec)
+
+//uint8
+MSE = np.sum((img - imgRec) ** 2) / (n (*nc) // ISTO NO FIM NAO SEI
 
 
 
