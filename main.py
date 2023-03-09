@@ -14,9 +14,11 @@ import scipy.fftpack as f
 import cv2
 
 
-fatorQ=75
+fatorQ=100
 nBlocos = 8
 
+"peppers.bmp" "logo.bmp" "barn_mountains.bmp"
+a_ver = "logo.bmp"
 
 matrizQuantY = np.array([[16, 11, 10, 16, 24, 40, 51, 61],
                          [12, 12, 14, 19, 26, 58, 60, 55],
@@ -69,7 +71,7 @@ def encoder(bmp):
     show(Cb, "canal cb no colormap cinza", grayCm)
     show(Cr, "canal cr no colormap cinza", grayCm)
 
-    Y_d, Cb_d, Cr_d = downsampling(Y, Cb, Cr, 4, 2, 0, grayCm)
+    Y_d, Cb_d, Cr_d = downsampling(Y, Cb, Cr, 4, 2, 2, grayCm)
 
     # Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_dct, Cb_dct, Cr_dct = dctblocos(Y_d, Cb_d, Cr_d, nBlocos, grayCm)
@@ -91,7 +93,7 @@ def decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2
     # Escolher 0,8,64 para aplicar a imagem inteira, blocos 8x8 e blocos 64x64 respetivamente
     Y_d, Cb_d, Cr_d = inversodctblocos(Y_dct, Cb_dct, Cr_dt, nBlocos, grayCm)
 
-    y, cb, cr = upsampling(Y_d, Cb_d, Cr_d, 4, 2, 0, grayCm)
+    y, cb, cr = upsampling(Y_d, Cb_d, Cr_d, 4, 2, 2, grayCm)
 
     r, g, b = YCbCrTorgb(y, cb, cr)
 
@@ -101,7 +103,7 @@ def decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2
     # tira o padding
     image = inversePadding(pimage, line, col)
 
-    show(image, "imagem descomprimida")
+    #show(image, "imagem descomprimida")
     return image, y, cb, cr
 
 
@@ -237,10 +239,6 @@ def downsampling(Y, Cr, Cb, fY, fCr, fCb, colormap):
 
     Cb_d = cv2.resize(Cb, dim1, fx=fCb / fY, fy=fy, interpolation=cv2.INTER_LINEAR)
     Cr_d = cv2.resize(Cr, dim2, fx=fCr / fY, fy=fy, interpolation=cv2.INTER_LINEAR)
-
-    print(Cb.shape[0], Cb.shape[1], Cb_d.shape[0], Cb_d.shape[1])
-    print(Cr.shape[0], Cr.shape[1], Cr_d.shape[0], Cr_d.shape[1])
-    print(fCb / fY, fCr / fY, fy)
 
     show(Y_d, "subamostragem Y", colormap)
     show(Cb_d, "subamostragem cb", colormap)
@@ -490,6 +488,7 @@ def codificao_dpcm(Y_quant, Cb_quant, Cr_quant,blocos,codeOrdecode,colormap,impr
 
 #10
 def calculaErro(imagem, imagemRec, yrec,yor ,line, col):
+    
     erro = abs(yor - yrec)
 
     grayCm = colorMap('gray', [(0, 0, 0), (1, 1, 1)], 256)
@@ -511,18 +510,14 @@ def calculaErro(imagem, imagemRec, yrec,yor ,line, col):
 
 
 def main():
-    "logo.bmp" "barn_mountains.bmp""peppers.bmp"
-    image,Yor, line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2 = encoder("barn_mountains.bmp")
+    image,Yor, line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2 = encoder(a_ver)
 
     imagemRec, y_rec, cb, cr = decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2)
 
-    image= image.astype(np.float64)
+    image_f= image.astype(np.float64)
 
-    calculaErro(image,imagemRec, y_rec, Yor, line, col)
-    #print(matrizQuantY)
-    #xyz  = encode_dpcmblocos(matrizQuantY,8)
-    #yzx = decode_dpcmblocos(xyz,8)
-    #print(yzx)
+    calculaErro(image_f,imagemRec, y_rec, Yor, line, col)
+
 
 
 
