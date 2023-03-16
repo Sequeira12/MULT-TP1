@@ -103,7 +103,7 @@ def decoder(line, col, Y_dpcm, Cb_dpcm, Cr_dpcm, matrizQuantY2, matrizQuantCbCr2
     # tira o padding
     image = inversePadding(pimage, line, col)
 
-    #show(image, "imagem descomprimida")
+    show(image, "imagem descomprimida")
     return image, y, cb, cr
 
 
