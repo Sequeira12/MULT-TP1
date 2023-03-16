@@ -18,7 +18,7 @@ fatorQ=100
 nBlocos = 8
 
 "peppers.bmp" "logo.bmp" "barn_mountains.bmp"
-a_ver = "logo.bmp"
+a_ver = "barn_mountains.bmp"
 
 matrizQuantY = np.array([[16, 11, 10, 16, 24, 40, 51, 61],
                          [12, 12, 14, 19, 26, 58, 60, 55],
@@ -265,9 +265,9 @@ def upsampling(Y_d, Cr_d, Cb_d, fY, fCr, fCb, colormap):
     Cb = cv2.resize(Cb_d, dim1, fx=fY / fCb, fy=fy, interpolation=cv2.INTER_LINEAR)
     Cr = cv2.resize(Cr_d, dim2, fx=fY / fCr, fy=fy, interpolation=cv2.INTER_LINEAR)
 
-    print(fy / fCb, fY / fCr, fy)
-    print(Cb.shape[0], Cb.shape[1], Cb_d.shape[0], Cb_d.shape[1])
-    print(Cr.shape[0], Cr.shape[1], Cr_d.shape[0], Cr_d.shape[1])
+    #print(fy / fCb, fY / fCr, fy)
+    #print(Cb.shape[0], Cb.shape[1], Cb_d.shape[0], Cb_d.shape[1])
+    #print(Cr.shape[0], Cr.shape[1], Cr_d.shape[0], Cr_d.shape[1])
 
     show(Y, "reconstrucao Y", colormap)
     show(Cb, "reconstrucao cb", colormap)
@@ -490,7 +490,8 @@ def codificao_dpcm(Y_quant, Cb_quant, Cr_quant,blocos,codeOrdecode,colormap,impr
 def calculaErro(imagem, imagemRec, yrec,yor ,line, col):
     
     erro = abs(yor - yrec)
-
+    print("Valor máximo de erro " + str(np.max(erro)))
+    print("Valor médio de erro " + str(np.mean(erro)))
     grayCm = colorMap('gray', [(0, 0, 0), (1, 1, 1)], 256)
 
     show(erro,"erro",grayCm)

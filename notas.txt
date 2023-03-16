@@ -189,9 +189,7 @@ Nota, na res do dct nao juntamos o cb e o cr no mesmo for porque se for por ex 4
 
 
 
-
-
-
+o matplotlib faz uma normalizacao das matrizes, entao nao é possivel ter uma nocao exata do erro
 
 
 
